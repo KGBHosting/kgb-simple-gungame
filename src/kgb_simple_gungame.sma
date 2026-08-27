@@ -14,7 +14,7 @@
 #include <hamsandwich>
 
 #define PLUGIN_NAME "KGB Simple GunGame"
-#define PLUGIN_VERSION "0.1.0"
+#define PLUGIN_VERSION "0.1.1"
 #define PLUGIN_AUTHOR "ToRRent / KGB Hosting"
 
 #define TASK_EQUIP_BASE 48100
@@ -120,7 +120,17 @@ public client_putinserver(id)
     resetPlayer(id)
 }
 
-public client_disconnected(id)
+public client_disconnect(id)
+{
+    cleanupDisconnectedClient(id)
+}
+
+public client_disconnected(id, bool:drop, message[], maxlen)
+{
+    cleanupDisconnectedClient(id)
+}
+
+stock cleanupDisconnectedClient(id)
 {
     remove_task(TASK_EQUIP_BASE + id)
     resetPlayer(id)

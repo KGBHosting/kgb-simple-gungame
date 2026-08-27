@@ -36,7 +36,9 @@ jobs:
       - name: Compile
         env:
           AMXX_VERSION: ${{ matrix.amxx-version }}
-        run: ./scripts/build.sh
+        run: |
+          ./scripts/build.sh
+          ./scripts/check-runtime-compatibility.sh
 
   build:
     name: Build release assets
@@ -55,6 +57,7 @@ jobs:
 
       - name: Verify source capabilities
         run: |
+          AMXX_VERSION=1.8.2 ./scripts/check-runtime-compatibility.sh
           grep -F 'register_srvcmd("kgb_gg_license", "command_license")' src/kgb_simple_gungame.sma
           grep -F '#include <cstrike>' src/kgb_simple_gungame.sma
           grep -F '#include <fun>' src/kgb_simple_gungame.sma

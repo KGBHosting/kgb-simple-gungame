@@ -27,8 +27,11 @@ map-vote integrations. It retains the upstream MIT license and copyright.
 - ReGameDLL is required for the recommended continuous-respawn gamemode recipe,
   but the plugin itself does not link to ReAPI.
 
-CI compiles the same source against all three supported AMX Mod X lines. The
-release binary is built with 1.8.2 for the widest supported runtime range.
+CI compiles the same source against all three supported AMX Mod X lines. It
+also verifies the legacy `client_disconnect` forward required by 1.8.2 and the
+newer `client_disconnected` forward, with both routed through one idempotent
+cleanup helper. The release binary is built with 1.8.2 for the widest supported
+runtime range.
 
 ## Install
 
