@@ -1,0 +1,5 @@
+.ci/
+compiled/*.amxx
+compiled/*.sha256
+dist/
+!.gitkeep

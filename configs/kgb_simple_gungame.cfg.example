@@ -1,0 +1,6 @@
+; KGB Simple GunGame defaults.
+kgb_gg_enabled 1
+kgb_gg_kills_per_level 1
+kgb_gg_armor 100
+kgb_gg_display_name "GunGame"
+kgb_gg_chat_prefix "[GunGame]"

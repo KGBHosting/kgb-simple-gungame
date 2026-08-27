@@ -1,0 +1,136 @@
+name: Build and Release
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  compatibility:
+    name: Compile AMXX ${{ matrix.amxx-version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        amxx-version:
+          - "1.8.2"
+          - "1.9"
+          - "1.10"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Compile
+        env:
+          AMXX_VERSION: ${{ matrix.amxx-version }}
+        run: ./scripts/build.sh
+
+  build:
+    name: Build release assets
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: compatibility
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Compile release binary
+        env:
+          AMXX_VERSION: "1.8.2"
+        run: ./scripts/build.sh
+
+      - name: Verify source capabilities
+        run: |
+          grep -F 'register_srvcmd("kgb_gg_license", "command_license")' src/kgb_simple_gungame.sma
+          grep -F '#include <cstrike>' src/kgb_simple_gungame.sma
+          grep -F '#include <fun>' src/kgb_simple_gungame.sma
+          grep -F '#include <hamsandwich>' src/kgb_simple_gungame.sma
+          ! grep -Eiq 'csr_|cobraknife|sound/|\.wav|\.mp3' src/kgb_simple_gungame.sma
+
+      - name: Test idempotent installation
+        run: ./scripts/test-install.sh
+
+      - name: Package release
+        run: |
+          package_version="$GITHUB_SHA"
+          case "$GITHUB_REF" in
+            refs/tags/v*) package_version="$GITHUB_REF_NAME" ;;
+          esac
+          ./scripts/package.sh "$package_version"
+          mkdir -p release-assets
+          cp compiled/kgb_simple_gungame.amxx compiled/kgb_simple_gungame.amxx.sha256 release-assets/
+          cp LICENSE release-assets/kgb_simple_gungame-LICENSE.txt
+          cp "dist/kgb-simple-gungame-$package_version.zip" "release-assets/kgb-simple-gungame-$package_version.zip"
+          cp "dist/kgb-simple-gungame-$package_version.zip.sha256" "release-assets/kgb-simple-gungame-$package_version.zip.sha256"
+
+      - name: Verify checksums
+        run: |
+          cd release-assets
+          for checksum in *.sha256; do
+            sha256sum --check "$checksum"
+          done
+
+      - name: Upload release assets
+        uses: actions/upload-artifact@v7
+        with:
+          name: kgb-simple-gungame-${{ github.sha }}
+          path: release-assets/
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Create GitHub release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      actions: read
+      contents: write
+
+    steps:
+      - name: Download verified assets
+        uses: actions/download-artifact@v5
+        with:
+          name: kgb-simple-gungame-${{ github.sha }}
+          path: release-assets
+
+      - name: Verify downloaded assets
+        run: |
+          test -s release-assets/kgb_simple_gungame.amxx
+          test -s release-assets/kgb_simple_gungame-LICENSE.txt
+          cd release-assets
+          for checksum in *.sha256; do
+            sha256sum --check "$checksum"
+          done
+
+      - name: Create prerelease
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          mapfile -t assets < <(find release-assets -maxdepth 1 -type f -print | sort)
+          release_flags=()
+          case "$GITHUB_REF_NAME" in
+            v0.*) release_flags+=(--prerelease) ;;
+          esac
+          gh release create "$GITHUB_REF_NAME" \
+            "${assets[@]}" \
+            "${release_flags[@]}" \
+            --verify-tag \
+            --title "KGB Simple GunGame $GITHUB_REF_NAME" \
+            --generate-notes
