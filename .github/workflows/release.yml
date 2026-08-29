@@ -33,6 +33,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      - name: Verify release metadata
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            ./scripts/check-release.sh "$GITHUB_REF_NAME"
+          else
+            ./scripts/check-release.sh
+          fi
+
       - name: Compile
         env:
           AMXX_VERSION: ${{ matrix.amxx-version }}
@@ -77,8 +85,18 @@ jobs:
           mkdir -p release-assets
           cp compiled/kgb_simple_gungame.amxx compiled/kgb_simple_gungame.amxx.sha256 release-assets/
           cp LICENSE release-assets/kgb_simple_gungame-LICENSE.txt
+          cp CHANGELOG.md release-assets/kgb_simple_gungame-CHANGELOG.md
           cp "dist/kgb-simple-gungame-$package_version.zip" "release-assets/kgb-simple-gungame-$package_version.zip"
           cp "dist/kgb-simple-gungame-$package_version.zip.sha256" "release-assets/kgb-simple-gungame-$package_version.zip.sha256"
+          (
+            cd release-assets
+            sha256sum \
+              kgb_simple_gungame.amxx \
+              kgb_simple_gungame-LICENSE.txt \
+              kgb_simple_gungame-CHANGELOG.md \
+              "kgb-simple-gungame-$package_version.zip" \
+              > SHA256SUMS
+          )
 
       - name: Verify checksums
         run: |
@@ -86,6 +104,7 @@ jobs:
           for checksum in *.sha256; do
             sha256sum --check "$checksum"
           done
+          sha256sum --check SHA256SUMS
 
       - name: Upload release assets
         uses: actions/upload-artifact@v7
@@ -116,12 +135,14 @@ jobs:
         run: |
           test -s release-assets/kgb_simple_gungame.amxx
           test -s release-assets/kgb_simple_gungame-LICENSE.txt
+          test -s release-assets/kgb_simple_gungame-CHANGELOG.md
           cd release-assets
           for checksum in *.sha256; do
             sha256sum --check "$checksum"
           done
+          sha256sum --check SHA256SUMS
 
-      - name: Create prerelease
+      - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
