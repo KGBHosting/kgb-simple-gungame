@@ -3,6 +3,10 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VERSION="${1:?Usage: scripts/package.sh <version>}"
+if [[ ! "$VERSION" =~ ^[A-Za-z0-9][A-Za-z0-9._+-]*$ ]]; then
+    printf 'Unsafe package version: %s\n' "$VERSION" >&2
+    exit 1
+fi
 PACKAGE="kgb-simple-gungame-$VERSION"
 STAGE="$ROOT_DIR/dist/$PACKAGE"
 ARCHIVE="$ROOT_DIR/dist/$PACKAGE.zip"
@@ -15,7 +19,15 @@ ZIP_TIMESTAMP="198001010000.00"
 
 rm -rf "$STAGE" "$ARCHIVE" "$CHECKSUM"
 mkdir -p "$STAGE/compiled" "$STAGE/configs" "$STAGE/scripts" "$STAGE/src"
-COPYFILE_DISABLE=1 cp "$ROOT_DIR/LICENSE" "$ROOT_DIR/README.md" "$ROOT_DIR/SECURITY.md" "$STAGE/"
+COPYFILE_DISABLE=1 cp \
+    "$ROOT_DIR/CHANGELOG.md" \
+    "$ROOT_DIR/LICENSE" \
+    "$ROOT_DIR/README.md" \
+    "$ROOT_DIR/RELEASING.md" \
+    "$ROOT_DIR/SECURITY.md" \
+    "$ROOT_DIR/VALIDATION.md" \
+    "$ROOT_DIR/VERSION" \
+    "$STAGE/"
 COPYFILE_DISABLE=1 cp "$ROOT_DIR/compiled/kgb_simple_gungame.amxx" "$ROOT_DIR/compiled/kgb_simple_gungame.amxx.sha256" "$STAGE/compiled/"
 COPYFILE_DISABLE=1 cp "$ROOT_DIR/configs/kgb_simple_gungame.cfg.example" "$STAGE/configs/"
 COPYFILE_DISABLE=1 cp "$ROOT_DIR/scripts/install.sh" "$STAGE/scripts/"

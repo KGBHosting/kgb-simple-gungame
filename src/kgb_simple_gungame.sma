@@ -14,7 +14,7 @@
 #include <hamsandwich>
 
 #define PLUGIN_NAME "KGB Simple GunGame"
-#define PLUGIN_VERSION "0.1.1"
+#define PLUGIN_VERSION "1.0.0"
 #define PLUGIN_AUTHOR "ToRRent / KGB Hosting"
 
 #define TASK_EQUIP_BASE 48100
