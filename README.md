@@ -5,7 +5,7 @@ Counter-Strike 1.6. It is usable by any server operator; no KGB Hosting account
 or KGB-specific runtime is required. Server owners can change the visible name
 and chat prefix in the supplied configuration.
 
-The current stable source release is **1.0.0**. Release tags, source metadata,
+The current stable source release is **1.0.1**. Release tags, source metadata,
 configuration documentation, and packaged assets are checked for version
 agreement before GitHub can publish a release.
 
@@ -20,7 +20,7 @@ map-vote integrations. It retains the upstream MIT license and copyright.
 - Spawn loadout restoration, armor, HUD progress, and `/level` or `/gg` status.
 - Configurable display name and chat prefix.
 - Admin level override through `amx_kgb_gg_setlevel`.
-- Bounded five-second restart after a winner completes the ladder.
+- Five-second winner display followed by an automatic match restart.
 - No custom sounds, models, sprites, or other client downloads.
 
 ## Exact gameplay behavior
@@ -35,7 +35,7 @@ map-vote integrations. It retains the upstream MIT license and copyright.
   spawn. It does not itself force respawns, make rounds infinite, or change buy
   rules; KGB's recommended gamemode recipe supplies those ReGameDLL settings.
 - Progress is in memory only. Disconnecting, a map/server restart, or the
-  five-second post-win restart resets progress.
+  post-win restart resets progress at the actual round start.
 - The HE level grants one grenade on spawn. A missed grenade is not replenished
   while the player remains alive; the next spawn restores the level loadout.
 - The weapon ladder is fixed in this release. Kills per level, spawn armor,

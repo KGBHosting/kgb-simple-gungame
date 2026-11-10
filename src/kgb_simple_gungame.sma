@@ -14,7 +14,7 @@
 #include <hamsandwich>
 
 #define PLUGIN_NAME "KGB Simple GunGame"
-#define PLUGIN_VERSION "1.0.0"
+#define PLUGIN_VERSION "1.0.1"
 #define PLUGIN_AUTHOR "ToRRent / KGB Hosting"
 
 #define TASK_EQUIP_BASE 48100
@@ -96,6 +96,7 @@ public plugin_init()
     g_MaxPlayers = get_maxplayers()
 
     register_event("DeathMsg", "event_death", "a")
+    register_event("HLTV", "event_new_round", "a", "1=0", "2=0")
     RegisterHam(Ham_Spawn, "player", "player_spawned", 1)
 
     register_clcmd("say /level", "command_level")
@@ -199,15 +200,25 @@ public equip_task(taskId)
 
 public restart_match()
 {
-    g_MatchEnding = false
+    // sv_restart schedules a later engine restart. Keep progression locked
+    // until the real new-round boundary, including during that delay.
+    server_cmd("sv_restart 1")
+}
 
+public event_new_round()
+{
+    if (!g_MatchEnding) {
+        return
+    }
+
+    remove_task(TASK_RESTART)
     for (new id = 1; id <= g_MaxPlayers; id++) {
         if (is_user_connected(id)) {
             resetPlayer(id)
         }
     }
 
-    server_cmd("sv_restart 1")
+    g_MatchEnding = false
 }
 
 public command_level(id)
@@ -330,7 +341,7 @@ stock finishMatch(winner)
     new prefix[32]
     get_user_name(winner, winnerName, charsmax(winnerName))
     safeCvarText(g_CvarChatPrefix, prefix, charsmax(prefix), "[GunGame]")
-    client_print(0, print_chat, "%s %s won the match. A new match starts in 5 seconds.", prefix, winnerName)
+    client_print(0, print_chat, "%s %s won the match. A new match will start shortly.", prefix, winnerName)
 
     set_task(5.0, "restart_match", TASK_RESTART)
 }
