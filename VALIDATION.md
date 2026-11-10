@@ -1,3 +1,29 @@
+## 1.0.1 restart guard
+
+The v1.0.0 win callback reset levels and unlocked progression before `sv_restart 1`
+finished the engine restart. A valid Glock kill during that interval could carry
+level 2 into the next match. The 1.0.1 callback keeps the ending guard set until
+ReGameDLL emits the actual `HLTV(0,0)` new-round event, synchronously before
+player respawns; normal non-winning round restarts keep existing progression.
+
+Primary source ordering: ReGameDLL commit
+`70307312cde05cec5d73a3d3a384b4bdac3d5fe2`,
+`regamedll/dlls/multiplay_gamerules.cpp` lines 1730-1733, 2047, 3129-3169;
+AMXX 1.9.0.5303 commit `b88b763a63bc7165f48e326c226eb05f9db0e54a`,
+`amxmodx/meta_api.cpp` lines 1402-1407.
+
+Live regression gate: use two controlled players, keep one at Glock level 1,
+win with the other's knife, then land a valid Glock kill after the five-second
+callback but before the engine actually restarts. The ending guard must remain
+set, and both players must start the next match at level 1 with Glock loadouts.
+Also test an operator-triggered early restart and an ordinary non-winning
+round restart. Engine instrumentation and bots must be identified as test
+doubles and do not replace real Valve-client gameplay qualification.
+
+This section records source reasoning and the live test plan, not a completed
+runtime or Valve-client result. The historical evidence below applies only to
+its stated versions.
+
 # Validation status
 
 This document separates automated compatibility checks, live server evidence,

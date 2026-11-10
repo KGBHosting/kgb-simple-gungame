@@ -1,4 +1,4 @@
-; Defaults for KGB Simple GunGame 1.0.0.
+; Defaults for KGB Simple GunGame 1.0.1.
 kgb_gg_enabled 1
 kgb_gg_kills_per_level 1
 kgb_gg_armor 100

@@ -3,6 +3,13 @@
 All notable changes to KGB Simple GunGame are documented here. Versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] - 2026-11-10
+
+- Keep progression locked throughout the engine restart delay after a win.
+- Reset the ladder at the actual new-round event before player respawns.
+- Cancel the queued win restart if an operator restarts the round earlier.
+- Describe the winner display without promising an exact engine restart time.
+
 ## [1.0.0] - 2026-08-29
 
 First stable release. Gameplay is unchanged from the development-qualified
@@ -28,6 +35,7 @@ Known validation gaps and behavioral limits are tracked in
 
 - Published the initial prerelease adaptation of Simple GunGame 1.0.9.
 
+[1.0.1]: https://github.com/KGBHosting/kgb-simple-gungame/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/KGBHosting/kgb-simple-gungame/compare/v0.1.1...v1.0.0
 [0.1.1]: https://github.com/KGBHosting/kgb-simple-gungame/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/KGBHosting/kgb-simple-gungame/releases/tag/v0.1.0
