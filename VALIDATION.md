@@ -73,3 +73,15 @@ Valve Steam CS1.6 clients on a disposable server to check:
 
 These gaps do not change the documented server-side behavior, but they mean the
 release must not be described as fully Valve-client-qualified.
+
+## Knife loadout correction (1.0.2)
+
+On 2026-11-10 a disposable development ReHLDS server with CStrike 1.9.0.5303
+reported native runtime error 10 from `cs_set_user_bpammo` when a controlled
+test client was assigned level 23. The source passed `CSW_KNIFE` to a native
+that requires a weapon with a backpack-ammunition slot. Version 1.0.2 skips
+that call for knife and continues to the configured armor and progress HUD.
+The public 1.0.0 and 1.0.1 tags and release assets remain immutable.
+
+This correction still requires running-server and Valve-client acceptance;
+compilation alone does not establish visible final-level behavior.

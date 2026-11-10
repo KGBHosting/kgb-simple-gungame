@@ -14,7 +14,7 @@
 #include <hamsandwich>
 
 #define PLUGIN_NAME "KGB Simple GunGame"
-#define PLUGIN_VERSION "1.0.1"
+#define PLUGIN_VERSION "1.0.2"
 #define PLUGIN_AUTHOR "ToRRent / KGB Hosting"
 
 #define TASK_EQUIP_BASE 48100
@@ -310,7 +310,8 @@ stock equipPlayer(id)
         give_item(id, g_WeaponEntities[level])
     }
 
-    if (weaponId > 0) {
+    // Knife has no backpack-ammo slot; the CStrike native rejects CSW_KNIFE.
+    if (weaponId > 0 && weaponId != CSW_KNIFE) {
         cs_set_user_bpammo(id, weaponId, weaponId == CSW_HEGRENADE ? 1 : 200)
     }
 
