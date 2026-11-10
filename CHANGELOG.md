@@ -3,6 +3,11 @@
 All notable changes to KGB Simple GunGame are documented here. Versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [1.0.2] - 2026-11-10
+
+- Skip backpack ammunition for the final knife level, which has no ammo slot.
+- Preserve final-level armor and HUD setup without a CStrike native error.
+
 ## [1.0.1] - 2026-11-10
 
 - Keep progression locked throughout the engine restart delay after a win.

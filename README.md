@@ -5,7 +5,7 @@ Counter-Strike 1.6. It is usable by any server operator; no KGB Hosting account
 or KGB-specific runtime is required. Server owners can change the visible name
 and chat prefix in the supplied configuration.
 
-The current stable source release is **1.0.1**. Release tags, source metadata,
+The current stable source release is **1.0.2**. Release tags, source metadata,
 configuration documentation, and packaged assets are checked for version
 agreement before GitHub can publish a release.
 
