@@ -14,11 +14,12 @@
 #include <hamsandwich>
 
 #define PLUGIN_NAME "KGB Simple GunGame"
-#define PLUGIN_VERSION "1.0.2"
+#define PLUGIN_VERSION "1.1.0"
 #define PLUGIN_AUTHOR "ToRRent / KGB Hosting"
 
 #define TASK_EQUIP_BASE 48100
 #define TASK_RESTART 48200
+#define TASK_LEADER_HUD 48201
 
 static const g_WeaponEntities[][] = {
     "weapon_glock18",
@@ -82,6 +83,10 @@ new g_CvarKillsPerLevel
 new g_CvarArmor
 new g_CvarDisplayName
 new g_CvarChatPrefix
+new g_CvarLeaderHud
+new g_LeaderHudSync
+new g_LastLeaderUserid
+new g_TopMenu[33]
 
 public plugin_init()
 {
@@ -93,7 +98,10 @@ public plugin_init()
     g_CvarArmor = register_cvar("kgb_gg_armor", "100")
     g_CvarDisplayName = register_cvar("kgb_gg_display_name", "GunGame")
     g_CvarChatPrefix = register_cvar("kgb_gg_chat_prefix", "[GunGame]")
+    g_CvarLeaderHud = register_cvar("kgb_gg_leader_hud", "1")
+    g_LeaderHudSync = CreateHudSyncObj()
     g_MaxPlayers = get_maxplayers()
+    for (new id = 0; id <= 32; id++) g_TopMenu[id] = -1
 
     register_event("DeathMsg", "event_death", "a")
     register_event("HLTV", "event_new_round", "a", "1=0", "2=0")
@@ -103,9 +111,12 @@ public plugin_init()
     register_clcmd("say_team /level", "command_level")
     register_clcmd("say /gg", "command_level")
     register_clcmd("say_team /gg", "command_level")
+    register_clcmd("say /ggtop", "command_top")
+    register_clcmd("say_team /ggtop", "command_top")
     register_concmd("amx_kgb_gg_setlevel", "command_set_level", ADMIN_BAN, "<player> <level>")
     register_srvcmd("kgb_gg_status", "command_status")
     register_srvcmd("kgb_gg_license", "command_license")
+    set_task(1.0, "task_leader_hud", TASK_LEADER_HUD, _, _, "b")
 }
 
 public plugin_cfg()
@@ -118,22 +129,26 @@ public plugin_cfg()
 
 public client_putinserver(id)
 {
+    closeTopMenu(id)
     resetPlayer(id)
 }
 
+#if AMXX_VERSION_NUM < 183
 public client_disconnect(id)
 {
     cleanupDisconnectedClient(id)
 }
-
+#else
 public client_disconnected(id, bool:drop, message[], maxlen)
 {
     cleanupDisconnectedClient(id)
 }
+#endif
 
 stock cleanupDisconnectedClient(id)
 {
     remove_task(TASK_EQUIP_BASE + id)
+    closeTopMenu(id)
     resetPlayer(id)
 }
 
@@ -219,6 +234,115 @@ public event_new_round()
     }
 
     g_MatchEnding = false
+    g_LastLeaderUserid = 0
+}
+
+public command_top(id)
+{
+    if (!isModeEnabled() || !is_user_connected(id)) return PLUGIN_CONTINUE
+    new players[32], count
+    for (new p = 1; p <= g_MaxPlayers; p++)
+        if (is_user_connected(p) && isPlaying(p)) players[count++] = p
+    for (new a = 0; a < count; a++)
+        for (new b = a + 1; b < count; b++)
+            if (progressAhead(players[b], players[a]))
+            { new swap = players[a]; players[a] = players[b]; players[b] = swap; }
+    new title[96], displayName[48]
+    safeCvarText(g_CvarDisplayName, displayName, charsmax(displayName), "GunGame")
+    formatex(title, charsmax(title), "%s: current ladder", displayName)
+    new menu = menu_create(title, "top_menu_handler")
+    for (new i = 0; i < min(count, 10); i++)
+    {
+        new name[32], line[128], level = clamp(g_Level[players[i]], 0, sizeof(g_WeaponEntities) - 1)
+        safePlayerName(players[i], name, charsmax(name))
+        formatex(line, charsmax(line), "%d. %s | %d/%d | %s (%d/%d)", i + 1, name, level + 1,
+            sizeof(g_WeaponEntities), g_WeaponLabels[level], g_KillsOnLevel[players[i]], clamp(get_pcvar_num(g_CvarKillsPerLevel), 1, 10))
+        menu_additem(menu, line)
+    }
+    if (!count) menu_additem(menu, "No players on the ladder")
+    closeTopMenu(id)
+    g_TopMenu[id] = menu
+    menu_display(id, menu)
+    return PLUGIN_HANDLED
+}
+
+public top_menu_handler(id, menu, item)
+{
+    if (g_TopMenu[id] == menu)
+    {
+        g_TopMenu[id] = -1
+        menu_destroy(menu)
+    }
+    return PLUGIN_HANDLED
+}
+
+stock closeTopMenu(id)
+{
+    if (g_TopMenu[id] < 0) return
+    new menu = g_TopMenu[id], old_menu, current
+    g_TopMenu[id] = -1
+    if (is_user_connected(id))
+    {
+        if (player_menu_info(id, old_menu, current) && current == menu)
+        {
+            menu_cancel(id)
+            show_menu(id, 0, "^n", 1)
+        }
+    }
+    menu_destroy(menu)
+}
+
+public plugin_end()
+{
+    for (new id = 1; id <= g_MaxPlayers; id++) closeTopMenu(id)
+    remove_task(TASK_LEADER_HUD)
+    ClearSyncHud(0, g_LeaderHudSync)
+}
+
+stock bool:progressAhead(a, b)
+{
+    return g_Level[a] > g_Level[b] || (g_Level[a] == g_Level[b] && g_KillsOnLevel[a] > g_KillsOnLevel[b])
+}
+
+public task_leader_hud()
+{
+    if (!isModeEnabled() || !get_pcvar_num(g_CvarLeaderHud) || g_MatchEnding) return
+    new leader, ties
+    for (new id = 1; id <= g_MaxPlayers; id++)
+    {
+        if (!is_user_connected(id) || !isPlaying(id)) continue
+        if (!leader || progressAhead(id, leader)) { leader = id; ties = 1; }
+        else if (!progressAhead(leader, id)) ties++
+    }
+    if (!leader) { g_LastLeaderUserid = 0; return; }
+    new level = clamp(g_Level[leader], 0, sizeof(g_WeaponEntities) - 1)
+    new name[32]
+    safePlayerName(leader, name, charsmax(name))
+    set_hudmessage(100, 210, 255, -1.0, 0.13, 0, 0.0, 1.2, 0.0, 0.1, -1)
+    if (ties > 1)
+    {
+        ShowSyncHudMsg(0, g_LeaderHudSync, "%d tied leaders | Level %d/%d | /ggtop", ties, level + 1, sizeof(g_WeaponEntities))
+        g_LastLeaderUserid = 0
+    }
+    else
+    {
+        ShowSyncHudMsg(0, g_LeaderHudSync, "Leader: %s | Level %d/%d | %s", name, level + 1, sizeof(g_WeaponEntities), g_WeaponLabels[level])
+        new userid = get_user_userid(leader)
+        if (userid != g_LastLeaderUserid && level > 0)
+        {
+            new prefix[32]
+            safeCvarText(g_CvarChatPrefix, prefix, charsmax(prefix), "[GunGame]")
+            client_print(0, print_chat, "%s %s leads the ladder. Type /ggtop for standings.", prefix, name)
+        }
+        g_LastLeaderUserid = userid
+    }
+}
+
+stock safePlayerName(id, output[], length)
+{
+    get_user_name(id, output, length)
+    for (new i = 0; output[i]; i++)
+        if (output[i] < 32 || output[i] > 126 || output[i] == 92 || output[i] == '%' || output[i] == 94) output[i] = '_'
 }
 
 public command_level(id)
