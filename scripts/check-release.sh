@@ -17,7 +17,7 @@ fi
 
 test "$(grep -Fxc "#define PLUGIN_VERSION \"$version\"" "$SOURCE")" -eq 1
 grep -Fx "; Defaults for KGB Simple GunGame $version." "$CONFIG" >/dev/null
-grep -F "The current stable source release is **$version**." "$README" >/dev/null
+grep -F "The current source version is **$version**" "$README" >/dev/null
 grep -F "## [$version] - " "$CHANGELOG" >/dev/null
 
 if test "$#" -gt 1; then

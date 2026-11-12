@@ -5,7 +5,8 @@ Counter-Strike 1.6. It is usable by any server operator; no KGB Hosting account
 or KGB-specific runtime is required. Server owners can change the visible name
 and chat prefix in the supplied configuration.
 
-The current stable source release is **1.0.2**. Release tags, source metadata,
+The current source version is **1.1.0** (development candidate; live qualification pending).
+The current qualified stable release remains **1.0.2**. Release tags, source metadata,
 configuration documentation, and packaged assets are checked for version
 agreement before GitHub can publish a release.
 
@@ -18,6 +19,7 @@ map-vote integrations. It retains the upstream MIT license and copyright.
 - 23-level stock-weapon ladder from Glock 18 through knife.
 - Exact-weapon kill validation and configurable kills per level.
 - Spawn loadout restoration, armor, HUD progress, and `/level` or `/gg` status.
+- Live leader HUD, lead-change announcements and `/ggtop` ladder standings.
 - Configurable display name and chat prefix.
 - Admin level override through `amx_kgb_gg_setlevel`.
 - Five-second winner display followed by an automatic match restart.

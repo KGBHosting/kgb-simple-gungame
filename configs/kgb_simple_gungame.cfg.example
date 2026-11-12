@@ -1,6 +1,9 @@
-; Defaults for KGB Simple GunGame 1.0.2.
+; Defaults for KGB Simple GunGame 1.1.0.
 kgb_gg_enabled 1
 kgb_gg_kills_per_level 1
 kgb_gg_armor 100
 kgb_gg_display_name "GunGame"
 kgb_gg_chat_prefix "[GunGame]"
+
+// Live leader HUD and lead-change announcements. /ggtop is always available.
+kgb_gg_leader_hud 1

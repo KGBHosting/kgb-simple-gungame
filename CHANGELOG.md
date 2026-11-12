@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0] - Development candidate
+
+- Adds live leader/progress HUD and /ggtop ladder standings.
+- Tracks lead changes by the current connection; ties are explicit.
+- Retains the qualified weapon ladder and win/restart lock.
+- Real-client and managed qualification pending; no release claim.
+
+
 All notable changes to KGB Simple GunGame are documented here. Versions follow
 [Semantic Versioning](https://semver.org/).
 
